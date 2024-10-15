@@ -1,11 +1,12 @@
 "use client";
 
 import styled from "styled-components";
+import { Vehicle } from ".";
 
 export default function AddCargo() {
   return (
     <MainDiv>
-      <div>zuka sfjhsdfkjaskfahsl</div>
+      <Vehicle />
     </MainDiv>
   );
 }

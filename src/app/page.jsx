@@ -12,7 +12,7 @@ export default function Home() {
 }
 
 const MainDiv = styled.div`
-  height: calc(100vh - 64px);
+  height: calc(100vh);
   background-color: #15151a;
   width: 100%;
   display: flex;
