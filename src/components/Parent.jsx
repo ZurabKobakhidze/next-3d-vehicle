@@ -14,6 +14,7 @@ export default function AddCargo() {
 const MainDiv = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 24px;
   width: 100%;
   padding-left: 72px;

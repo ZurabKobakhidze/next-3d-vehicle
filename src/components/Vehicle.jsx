@@ -13,7 +13,7 @@ import styled from "styled-components";
 import useCustomMaterialUpdater from "@/hook/useCustomMaterialUpdater";
 
 function Model({ wireframeMode, rotationRef, selectedColor, ...props }) {
-  const { scene, materials } = useGLTF("/Porsche911.glb");
+  const { scene, materials } = useGLTF("/KenworthTest.glb");
 
   const materialName = "Material.004";
   const wireframeProperties = {
@@ -94,7 +94,7 @@ function RotatingContactShadows({ rotationRef }) {
   return (
     <ContactShadows
       rotation={[Math.PI / 2, 0, 0]} // Ensure the shadow is horizontal on the ground
-      position={[0, -0.53, 0]}
+      position={[0, -0.6505, 0]}
       scale={10}
       blur={2}
       opacity={1.5}
@@ -105,7 +105,7 @@ function RotatingContactShadows({ rotationRef }) {
 
 function RotatingComponent({ rotationRef }) {
   useFrame((state, delta) => {
-    rotationRef.current.rotation.y += delta * 0.05; // Adjust rotation speed as needed
+    rotationRef.current.rotation.y += delta * -0.05; // Adjust rotation speed as needed
   });
   return null;
 }
@@ -125,11 +125,11 @@ export default function Vehicle({ selectedColor }) {
           <Canvas
             shadows
             dpr={[1, 2]}
-            camera={{ position: [-3, 1, 3], fov: 35 }}
+            camera={{ position: [-3, -1, 3], fov: 35 }}
           >
             <Model
-              scale={0.8}
-              position={[0, -0.44, 0]}
+              scale={0.4}
+              position={[0, -0.65, 0]}
               rotation={[0, Math.PI / 5, 0]}
               wireframeMode={wireframeMode}
               rotationRef={rotationRef}
@@ -197,19 +197,40 @@ export default function Vehicle({ selectedColor }) {
           </Canvas>
         </CanvasWrapper>
         <ButtonWrapper>
+          <IconDiv></IconDiv>
+          <IconDiv></IconDiv>
           <ButtonShape onClick={toggleWireframeMode}>
             Wireframe Mode
           </ButtonShape>
+          <IconDiv></IconDiv>
+          <IconDiv></IconDiv>
         </ButtonWrapper>
       </div>
     </Suspense>
   );
 }
 
+const IconDiv = styled.div`
+  width: 40px;
+  height: 40px;
+  background-color: #0f1113;
+  border-radius: 16px;
+  cursor: pointer;
+  &:hover {
+    background-color: #5493f0;
+  }
+`;
+
 const CanvasWrapper = styled.div`
   display: block;
+
   width: 100%;
-  height: 1000px;
+  height: 900px;
+  /* border-top-left-radius: 600px;
+  border-top-right-radius: 600px;
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px; */
+  overflow: hidden;
   canvas {
     width: 100% !important;
     height: 100% !important;
@@ -220,6 +241,7 @@ const ButtonWrapper = styled.div`
   display: flex;
   justify-content: center;
   margin-top: 20px;
+  gap: 12px;
   button {
     padding: 10px 20px;
     font-size: 16px;
@@ -232,7 +254,7 @@ const ButtonShape = styled.div`
   font-style: normal;
   font-weight: 500;
   line-height: normal;
-  background-color: #272e37;
+  background-color: #0f1113;
   padding: 8px 12px 8px 12px;
   border-radius: 16px;
   height: 40px;
