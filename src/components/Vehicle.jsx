@@ -11,6 +11,7 @@ import {
 } from "@react-three/drei";
 import styled from "styled-components";
 import useCustomMaterialUpdater from "@/hook/useCustomMaterialUpdater";
+import { BatteryIcon, ChasisIcon, EngineIcon, WheelIcon } from "./icons";
 
 function Model({ wireframeMode, rotationRef, selectedColor, ...props }) {
   const { scene, materials } = useGLTF("/KenworthTest.glb");
@@ -197,13 +198,19 @@ export default function Vehicle({ selectedColor }) {
           </Canvas>
         </CanvasWrapper>
         <ButtonWrapper>
-          <IconDiv></IconDiv>
-          <IconDiv></IconDiv>
-          <ButtonShape onClick={toggleWireframeMode}>
-            Wireframe Mode
-          </ButtonShape>
-          <IconDiv></IconDiv>
-          <IconDiv></IconDiv>
+          <IconDiv>
+            <ChasisIcon />
+          </IconDiv>
+          <IconDiv>
+            <EngineIcon />
+          </IconDiv>
+          <ButtonShape onClick={toggleWireframeMode}>Diagnostic</ButtonShape>
+          <IconDiv>
+            <BatteryIcon />
+          </IconDiv>
+          <IconDiv>
+            <WheelIcon />
+          </IconDiv>
         </ButtonWrapper>
       </div>
     </Suspense>
@@ -211,10 +218,14 @@ export default function Vehicle({ selectedColor }) {
 }
 
 const IconDiv = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   width: 40px;
   height: 40px;
   background-color: #0f1113;
-  border-radius: 16px;
+  border-radius: 12px;
   cursor: pointer;
   &:hover {
     background-color: #5493f0;
@@ -250,7 +261,7 @@ const ButtonWrapper = styled.div`
 `;
 const ButtonShape = styled.div`
   color: #ffffff;
-  font-size: 16px;
+  font-size: 12px;
   font-style: normal;
   font-weight: 500;
   line-height: normal;
