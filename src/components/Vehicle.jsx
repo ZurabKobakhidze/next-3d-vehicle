@@ -12,6 +12,7 @@ import {
 import styled from "styled-components";
 import useCustomMaterialUpdater from "@/hook/useCustomMaterialUpdater";
 import { BatteryIcon, ChasisIcon, EngineIcon, WheelIcon } from "./icons";
+import { motion, AnimatePresence } from "framer-motion";
 
 function Model({ wireframeMode, rotationRef, selectedColor, ...props }) {
   const { scene, materials } = useGLTF("/KenworthTest.glb");
@@ -198,26 +199,62 @@ export default function Vehicle({ selectedColor }) {
           </Canvas>
         </CanvasWrapper>
         <ButtonWrapper>
-          <IconDiv>
-            <ChasisIcon />
-          </IconDiv>
-          <IconDiv>
-            <EngineIcon />
-          </IconDiv>
+          <AnimatePresence initial={false}>
+            {wireframeMode && (
+              <>
+                <IconDiv
+                  key="chasis"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ChasisIcon />
+                </IconDiv>
+                <IconDiv
+                  key="engine"
+                  initial={{ opacity: 0, x: 7 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 7 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <EngineIcon />
+                </IconDiv>
+              </>
+            )}
+          </AnimatePresence>
           <ButtonShape onClick={toggleWireframeMode}>Diagnostic</ButtonShape>
-          <IconDiv>
-            <BatteryIcon />
-          </IconDiv>
-          <IconDiv>
-            <WheelIcon />
-          </IconDiv>
+          <AnimatePresence initial={false}>
+            {wireframeMode && (
+              <>
+                <IconDiv
+                  key="battery"
+                  initial={{ opacity: 0, x: -7 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -7 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <BatteryIcon />
+                </IconDiv>
+                <IconDiv
+                  key="wheel"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <WheelIcon />
+                </IconDiv>
+              </>
+            )}
+          </AnimatePresence>
         </ButtonWrapper>
       </div>
     </Suspense>
   );
 }
 
-const IconDiv = styled.div`
+const IconDiv = styled(motion.div)`
   display: flex;
   flex-direction: column;
   align-items: center;
