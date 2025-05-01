@@ -8,10 +8,23 @@ function useCustomMaterialUpdater(
   materialName,
   wireframeProperties,
   selectedColor,
+  highlight  
 ) {
-  const originalMaterialsRef = useRef({});
+  const originals = useRef({});
 
-  const wireframeMaterial = useMemo(
+  // one reusable yellow wireframe for highlighting the chosen part
+  const highlightMaterial = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: '#ffaf11',
+        wireframe: true,
+        polygonOffset: true,          // avoid z-fighting
+        polygonOffsetFactor: -1,
+      }),
+    []
+  );
+
+  const diagnosticWire = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
         color: wireframeProperties.color,
@@ -19,41 +32,47 @@ function useCustomMaterialUpdater(
         opacity: wireframeProperties.opacity,
         transparent: wireframeProperties.transparent,
       }),
-    [wireframeProperties],
+    [wireframeProperties]
   );
 
   useEffect(() => {
-    const currentOriginalMaterials = originalMaterialsRef.current;
-
-    if (materials[materialName]) {
-      materials[materialName].color.set(selectedColor);
-    }
-
     scene.traverse((child) => {
-      if (child.isMesh) {
-        if (!currentOriginalMaterials[child.name]) {
-          currentOriginalMaterials[child.name] = child.material;
+      if (!child.isMesh) return;
+    
+      if (!originals.current[child.uuid])
+        originals.current[child.uuid] = child.material;
+    
+      const original = originals.current[child.uuid];
+      let nextMat = original;                       // default look
+    
+      if (wireframeMode) {
+        // global blue
+        nextMat = diagnosticWire;
+    
+        // but if this mesh’s ORIGINAL material equals the highlighted one,
+        // override with the yellow outline
+        if (highlight && original === materials[highlight]) {
+          nextMat = highlightMaterial;
         }
-        child.material = wireframeMode
-          ? wireframeMaterial
-          : currentOriginalMaterials[child.name];
       }
+    
+      child.material = nextMat;
     });
+    
 
-    return () => {
+    // clean-up when component unmounts
+    return () =>
       scene.traverse((child) => {
-        if (child.isMesh && currentOriginalMaterials[child.name]) {
-          child.material = currentOriginalMaterials[child.name];
+        if (child.isMesh && originals.current[child.uuid]) {
+          child.material = originals.current[child.uuid];
         }
       });
-    };
   }, [
     scene,
     materials,
     wireframeMode,
-    wireframeMaterial,
-    selectedColor,
-    materialName,
+    diagnosticWire,
+    highlight,          // <── rerun when user picks another part
   ]);
 }
 

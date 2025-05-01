@@ -14,7 +14,13 @@ import useCustomMaterialUpdater from "@/hook/useCustomMaterialUpdater";
 import { BatteryIcon, ChasisIcon, EngineIcon, WheelIcon } from "./icons";
 import { motion, AnimatePresence } from "framer-motion";
 
-function Model({ wireframeMode, rotationRef, selectedColor, ...props }) {
+function Model({
+  wireframeMode,
+  rotationRef,
+  selectedColor,
+  highlight,
+  ...props
+}) {
   const { scene, materials } = useGLTF("/KenworthTest.glb");
 
   const materialName = "Material.004";
@@ -31,7 +37,8 @@ function Model({ wireframeMode, rotationRef, selectedColor, ...props }) {
     wireframeMode,
     materialName,
     wireframeProperties,
-    selectedColor
+    selectedColor,
+    highlight
   );
   useFrame(() => {
     scene.rotation.copy(rotationRef.current.rotation);
@@ -114,11 +121,11 @@ function RotatingComponent({ rotationRef }) {
 
 export default function Vehicle({ selectedColor }) {
   const [wireframeMode, setWireframeMode] = useState(false);
+  const [highlight, setHighlight] = useState(null);
   const rotationRef = useRef(new THREE.Object3D());
 
-  const toggleWireframeMode = () => {
-    setWireframeMode((mode) => !mode);
-  };
+  const toggleWireframeMode = () =>
+    setWireframeMode((m) => (m ? (setHighlight(null), false) : true));
 
   return (
     <Suspense fallback={null}>
@@ -136,6 +143,7 @@ export default function Vehicle({ selectedColor }) {
               wireframeMode={wireframeMode}
               rotationRef={rotationRef}
               selectedColor={selectedColor}
+              highlight={highlight} /* <── NEW  */
             />
             <RotatingLight />
             <spotLight
@@ -203,7 +211,10 @@ export default function Vehicle({ selectedColor }) {
             {wireframeMode && (
               <>
                 <IconDiv
-                  key="chasis"
+                  key="Chasis"
+                  onClick={() =>
+                    setHighlight((h) => (h === "Chasis" ? null : "Chasis"))
+                  }
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 10 }}
@@ -213,6 +224,9 @@ export default function Vehicle({ selectedColor }) {
                 </IconDiv>
                 <IconDiv
                   key="engine"
+                  onClick={() =>
+                    setHighlight((h) => (h === "engine" ? null : "engine"))
+                  }
                   initial={{ opacity: 0, x: 7 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 7 }}
@@ -223,7 +237,9 @@ export default function Vehicle({ selectedColor }) {
               </>
             )}
           </AnimatePresence>
-          <ButtonShape onClick={toggleWireframeMode}>Diagnostic</ButtonShape>
+          <ButtonShape onClick={() => setWireframeMode((m) => !m)}>
+            Diagnostic
+          </ButtonShape>
           <AnimatePresence initial={false}>
             {wireframeMode && (
               <>
@@ -233,11 +249,17 @@ export default function Vehicle({ selectedColor }) {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -7 }}
                   transition={{ duration: 0.3 }}
+                  onClick={() =>
+                    setHighlight((h) => (h === "battery" ? null : "battery"))
+                  } /* <── NEW */
                 >
                   <BatteryIcon />
                 </IconDiv>
                 <IconDiv
                   key="wheel"
+                  onClick={() =>
+                    setHighlight((h) => (h === "tier" ? null : "tier"))
+                  }
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10 }}
