@@ -47,27 +47,29 @@ function Model({
   return <primitive object={scene} {...props} />;
 }
 
-function MovingSpots({ positions = [2, 0, 2, 0, 2, 0, 2, 0] }) {
-  const group = useRef();
-  useFrame(
-    (state, delta) =>
-      (group.current.position.z += delta * 8) > 60 &&
-      (group.current.position.z = -60)
+function StaticSpots({
+  y = 4,          // height above the ground
+  radius = 2,     // how far out from the center each spot is
+  count = 6,      // number of circles
+}) {
+  // angles around a circle
+  const angles = useMemo(
+    () => [...Array(count)].map((_, i) => (i / count) * Math.PI * 2),
+    [count]
   );
+
   return (
-    <group rotation={[0, 0.5, 0]}>
-      <group ref={group}>
-        {positions.map((x, i) => (
-          <Lightformer
-            key={i}
-            form="circle"
-            intensity={3}
-            rotation={[Math.PI / 2, 0, 0]}
-            position={[x, 4, i * 4]}
-            scale={[3, 1, 1]}
-          />
-        ))}
-      </group>
+    // tip the whole ring so circles face downwards
+    <group rotation={[Math.PI / 2, 0, 0]} position={[0, y, 0]}>
+      {angles.map((a, i) => (
+        <Lightformer
+          key={i}
+          form="circle"
+          intensity={3}
+          position={[radius * Math.cos(a), 0, radius * Math.sin(a)]}
+          scale={[3, 1, 1]}
+        />
+      ))}
     </group>
   );
 }
@@ -112,9 +114,9 @@ function RotatingContactShadows({ rotationRef }) {
   );
 }
 
-function RotatingComponent({ rotationRef }) {
+function RotatingComponent({ rotationRef, active }) {
   useFrame((state, delta) => {
-    rotationRef.current.rotation.y += delta * -0.05; // Adjust rotation speed as needed
+    if (active) rotationRef.current.rotation.y += delta * -0.05;
   });
   return null;
 }
@@ -124,8 +126,17 @@ export default function Vehicle({ selectedColor }) {
   const [highlight, setHighlight] = useState(null);
   const rotationRef = useRef(new THREE.Object3D());
 
-  const toggleWireframeMode = () =>
-    setWireframeMode((m) => (m ? (setHighlight(null), false) : true));
+  useEffect(() => {
+    if (wireframeMode) {
+      // snap to a fixed isometric orientation when Diagnostic turns on
+      rotationRef.current.rotation.set(0, Math.PI / 4, 0);
+    }
+  }, [wireframeMode]);
+
+  const toggleWireframeMode = () => {
+    setHighlight(null); // clear any yellow outline
+    setWireframeMode((m) => !m); // flip the diagnostic flag
+  };
 
   return (
     <Suspense fallback={null}>
@@ -165,7 +176,7 @@ export default function Vehicle({ selectedColor }) {
                 position={[0, 5, 0]}
                 scale={[15, 15, 15]}
               />
-              <MovingSpots />
+              <StaticSpots  y={4} radius={2.5} count={8} />
               <Lightformer
                 intensity={1}
                 form="circle"
@@ -203,7 +214,10 @@ export default function Vehicle({ selectedColor }) {
               minPolarAngle={Math.PI / 4}
               maxPolarAngle={Math.PI / 2}
             />
-            <RotatingComponent rotationRef={rotationRef} />
+            <RotatingComponent
+              rotationRef={rotationRef}
+              active={!wireframeMode}
+            />
           </Canvas>
         </CanvasWrapper>
         <ButtonWrapper>

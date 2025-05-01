@@ -1,5 +1,5 @@
-import { useEffect, useRef, useMemo } from 'react';
-import * as THREE from 'three';
+import { useEffect, useRef, useMemo } from "react";
+import * as THREE from "three";
 
 function useCustomMaterialUpdater(
   scene,
@@ -8,7 +8,7 @@ function useCustomMaterialUpdater(
   materialName,
   wireframeProperties,
   selectedColor,
-  highlight  
+  highlight
 ) {
   const originals = useRef({});
 
@@ -16,9 +16,9 @@ function useCustomMaterialUpdater(
   const highlightMaterial = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
-        color: '#ffaf11',
+        color: "#ffaf11",
         wireframe: true,
-        polygonOffset: true,          // avoid z-fighting
+        polygonOffset: true, // avoid z-fighting
         polygonOffsetFactor: -1,
       }),
     []
@@ -38,27 +38,26 @@ function useCustomMaterialUpdater(
   useEffect(() => {
     scene.traverse((child) => {
       if (!child.isMesh) return;
-    
+
       if (!originals.current[child.uuid])
         originals.current[child.uuid] = child.material;
-    
+
       const original = originals.current[child.uuid];
-      let nextMat = original;                       // default look
-    
+      let nextMat = original; // default look
+
       if (wireframeMode) {
         // global blue
         nextMat = diagnosticWire;
-    
+
         // but if this mesh’s ORIGINAL material equals the highlighted one,
         // override with the yellow outline
         if (highlight && original === materials[highlight]) {
           nextMat = highlightMaterial;
         }
       }
-    
+
       child.material = nextMat;
     });
-    
 
     // clean-up when component unmounts
     return () =>
@@ -72,7 +71,7 @@ function useCustomMaterialUpdater(
     materials,
     wireframeMode,
     diagnosticWire,
-    highlight,          // <── rerun when user picks another part
+    highlight, // <── rerun when user picks another part
   ]);
 }
 
