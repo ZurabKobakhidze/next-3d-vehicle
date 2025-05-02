@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { useRef, Suspense, useMemo, useState, useEffect } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   Environment,
   Lightformer,
@@ -13,6 +13,8 @@ import styled from "styled-components";
 import useCustomMaterialUpdater from "@/hook/useCustomMaterialUpdater";
 import { BatteryIcon, ChasisIcon, EngineIcon, WheelIcon } from "./icons";
 import { motion, AnimatePresence } from "framer-motion";
+import JEASINGS from "jeasings";
+import { WheelMarker } from "./click-dots";
 
 function Model({
   wireframeMode,
@@ -48,9 +50,9 @@ function Model({
 }
 
 function StaticSpots({
-  y = 4,          // height above the ground
-  radius = 2,     // how far out from the center each spot is
-  count = 6,      // number of circles
+  y = 4, // height above the ground
+  radius = 2, // how far out from the center each spot is
+  count = 6, // number of circles
 }) {
   // angles around a circle
   const angles = useMemo(
@@ -121,21 +123,110 @@ function RotatingComponent({ rotationRef, active }) {
   return null;
 }
 
-export default function Vehicle({ selectedColor }) {
-  const [wireframeMode, setWireframeMode] = useState(false);
-  const [highlight, setHighlight] = useState(null);
-  const rotationRef = useRef(new THREE.Object3D());
+function JEasingLoop() {
+  useFrame(() => JEASINGS.update());
+  return null;
+}
+
+function flyTo(point /* THREE.Vector3 */, camera, controls, distance = 3) {
+  // where should the camera end up?
+  const dir = new THREE.Vector3()
+    .subVectors(camera.position, controls.target) // current view direction
+    .normalize();
+  const newCamPos = new THREE.Vector3()
+    .copy(point)
+    .addScaledVector(dir, distance); // pull back <distance> metres
+
+  // animate camera.position
+  new JEASINGS.JEasing(camera.position)
+    .to(newCamPos, 800)
+    .easing(JEASINGS.Cubic.InOut)
+    .start();
+
+  // animate orbit target
+  new JEASINGS.JEasing(controls.target)
+    .to(point, 800)
+    .easing(JEASINGS.Cubic.InOut)
+    .start();
+}
+
+function DiagnosticPreset({ active, distance = 6 }) {
+  const { camera, controls } = useThree();
 
   useEffect(() => {
-    if (wireframeMode) {
-      // snap to a fixed isometric orientation when Diagnostic turns on
-      rotationRef.current.rotation.set(0, Math.PI / 4, 0);
-    }
+    if (!active || !controls) return;
+
+    // 1️⃣  where should the camera look?
+    const target = new THREE.Vector3(0, -0.3, 0); //  (x, y, z)
+
+    // 2️⃣  where should the camera stand?
+    const yaw = THREE.MathUtils.degToRad(5); // left‑front
+    const pitch = THREE.MathUtils.degToRad(20); // 20° above horizon
+
+    const r = distance;
+    const offset = new THREE.Vector3(
+      r * Math.cos(pitch) * Math.sin(yaw), // x
+      r * Math.sin(pitch), // y
+      r * Math.cos(pitch) * Math.cos(yaw) // z
+    );
+
+    camera.position.copy(target).add(offset);
+    camera.updateProjectionMatrix();
+
+    controls.target.copy(target);
+    controls.update();
+  }, [active, distance]);
+
+  return null;
+}
+
+// ⬅─ helper that sits INSIDE <Canvas>
+function CameraRig({ fly, distance = 2 }) {
+  const { camera, controls } = useThree(); // <- now it’s legal
+  useEffect(() => {
+    if (!fly) return;
+    const { point } = fly; // point = THREE.Vector3
+    // same helper you already wrote …
+    flyTo(point, camera, controls, distance);
+  }, [fly]);
+  return null;
+}
+
+export default function Vehicle({ selectedColor }) {
+  /* --- UI state (outside) ------------------------------------ */
+  const [wireframeMode, setWireframeMode] = useState(false);
+  const [fly, setFly] = useState(null); // <── NEW
+  const [highlight, setHighlight] = useState(null);
+  const rotationRef = useRef(new THREE.Object3D());
+  const controls = useRef();
+
+  /* turn the controller on/off whenever wireframeMode changes */
+  useEffect(() => {
+    if (!controls.current) return;
+    controls.current.enabled = !wireframeMode; // ⇐ freeze when diagnostic is ON
   }, [wireframeMode]);
 
+  // put this right next to the yaw/pitch constants you already have
+  const camYaw = THREE.MathUtils.degToRad(-35); // camera turns −35° around Y
+  const camPitch = THREE.MathUtils.degToRad(20); // camera 20° up
+
+  /* ------------------------------------------------------------------- */
+  /* reset the model the moment Diagnostic switches on                   */
+  useEffect(() => {
+    if (wireframeMode) {
+      /* Face the truck toward the camera: reverse the camera’s yaw.
+       We leave X‑rot & Z‑rot at 0 because the truck itself isn’t pitched. */
+      rotationRef.current.rotation.set(
+        0, // X  (no nose‑up / nose‑down)
+        camYaw, // Y  (turn to face the camera)
+        0 // Z
+      );
+    }
+  }, [wireframeMode, camYaw]);
+
   const toggleWireframeMode = () => {
-    setHighlight(null); // clear any yellow outline
-    setWireframeMode((m) => !m); // flip the diagnostic flag
+    setHighlight(null);
+    setWireframeMode((m) => !m);
   };
 
   return (
@@ -145,8 +236,9 @@ export default function Vehicle({ selectedColor }) {
           <Canvas
             shadows
             dpr={[1, 2]}
-            camera={{ position: [-3, -1, 3], fov: 35 }}
+            camera={{ fov: 45, position: [-3, 1, 3] }}
           >
+            <DiagnosticPreset active={wireframeMode} distance={4} />
             <Model
               scale={0.4}
               position={[0, -0.65, 0]}
@@ -156,6 +248,14 @@ export default function Vehicle({ selectedColor }) {
               selectedColor={selectedColor}
               highlight={highlight} /* <── NEW  */
             />
+            <JEasingLoop />
+            <CameraRig fly={fly} />
+            {/* {wireframeMode && (
+              <WheelMarker
+                pos={new THREE.Vector3(1, 0.5, 1)}
+                onClick={(p) => setFly({ point: p })}
+              />
+            )} */}
             <RotatingLight />
             <spotLight
               position={[-10, 20, -10]}
@@ -176,7 +276,7 @@ export default function Vehicle({ selectedColor }) {
                 position={[0, 5, 0]}
                 scale={[15, 15, 15]}
               />
-              <StaticSpots  y={4} radius={2.5} count={8} />
+              <StaticSpots y={4} radius={2.5} count={8} />
               <Lightformer
                 intensity={1}
                 form="circle"
@@ -208,15 +308,15 @@ export default function Vehicle({ selectedColor }) {
             </Environment>
             <BakeShadows />
             <OrbitControls
+              makeDefault
               enableDamping
-              dampingFactor={0.2}
-              rotateSpeed={0.5}
-              minPolarAngle={Math.PI / 4}
-              maxPolarAngle={Math.PI / 2}
+              enabled={!wireframeMode} // ← same effect
+              ref={controls}
+              enablePan={false}
             />
             <RotatingComponent
-              rotationRef={rotationRef}
               active={!wireframeMode}
+              rotationRef={rotationRef}
             />
           </Canvas>
         </CanvasWrapper>
