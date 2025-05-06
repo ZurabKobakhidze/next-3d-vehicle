@@ -437,7 +437,7 @@ const CanvasWrapper = styled.div`
   display: block;
 
   width: 100%;
-  height: 900px;
+  height: 700px;
   /* border-top-left-radius: 600px;
   border-top-right-radius: 600px;
   border-bottom-left-radius: 24px;

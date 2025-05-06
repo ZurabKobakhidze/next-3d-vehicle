@@ -17,8 +17,6 @@ const MainDiv = styled.div`
   align-items: center;
   gap: 24px;
   width: 100%;
-  padding-left: 72px;
-  padding-right: 72px;
   padding-top: 24px;
   box-sizing: border-box;
 `;
