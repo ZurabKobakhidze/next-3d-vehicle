@@ -348,20 +348,6 @@ export default function Vehicle({ selectedColor }) {
             />
           </Canvas>
         </CanvasWrapper>
-        {/* {showRepair && (
-          <div
-            style={{
-              position: "absolute",
-              pointerEvents: "none",
-              left: 0,
-              top: 0,
-              width: "100%",
-              height: "100%",
-            }}
-          >
-            <WheelRepair />
-          </div>
-        )} */}
         <ButtonWrapper>
           <AnimatePresence initial={false}>
             {wireframeMode && (
