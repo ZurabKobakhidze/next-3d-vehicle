@@ -18,5 +18,8 @@
     "react-dom": "^18",
     "styled-components": "^6.1.13",
     "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "babel-plugin-styled-components": "^2.1.4"
   }
 }
