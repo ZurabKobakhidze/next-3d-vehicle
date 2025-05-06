@@ -24,6 +24,18 @@ function useCustomMaterialUpdater(
     []
   );
 
+  // 🔴 special outline for the damaged wheel
+  const damagedMaterial = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: "#ef233c", // red
+        wireframe: true,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+      }),
+    []
+  );
+
   const diagnosticWire = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
@@ -46,12 +58,14 @@ function useCustomMaterialUpdater(
       let nextMat = original; // default look
 
       if (wireframeMode) {
-        // global blue
+        /* 1️⃣ global blue diagnostic first */
         nextMat = diagnosticWire;
 
-        // but if this mesh’s ORIGINAL material equals the highlighted one,
-        // override with the yellow outline
-        if (highlight && original === materials[highlight]) {
+        /* 2️⃣ damaged wheel takes precedence */
+        if (highlight === "tier" && child.name === "piece_4006") {
+          nextMat = damagedMaterial;
+          /* 3️⃣ otherwise the usual yellow highlight */
+        } else if (highlight && original === materials[highlight]) {
           nextMat = highlightMaterial;
         }
       }

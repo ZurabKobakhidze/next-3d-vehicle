@@ -313,6 +313,9 @@ export default function Vehicle({ selectedColor }) {
               enabled={!wireframeMode} // ← same effect
               ref={controls}
               enablePan={false}
+              /* 👇 vertical limits */
+              minPolarAngle={0} // look straight down to the roof at most
+              maxPolarAngle={Math.PI / 2} // never cross the horizon – no bottom view
             />
             <RotatingComponent
               active={!wireframeMode}
