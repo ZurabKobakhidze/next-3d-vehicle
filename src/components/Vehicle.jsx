@@ -15,12 +15,15 @@ import { BatteryIcon, ChasisIcon, EngineIcon, WheelIcon } from "./icons";
 import { motion, AnimatePresence } from "framer-motion";
 import JEASINGS from "jeasings";
 import { WheelMarker } from "./click-dots";
+import { WheelRepair } from ".";
+import { Html } from "@react-three/drei";
 
 function Model({
   wireframeMode,
   rotationRef,
   selectedColor,
   highlight,
+  setShowRepair,
   ...props
 }) {
   const { scene, materials } = useGLTF("/KenworthTest.glb");
@@ -46,7 +49,30 @@ function Model({
     scene.rotation.copy(rotationRef.current.rotation);
   });
 
-  return <primitive object={scene} {...props} />;
+  /* ---------------- pointer handlers ---------------- */
+  const handleOver = (e) => {
+    // which exact mesh did the ray‑caster hit?
+    if (e.object?.name === "piece_4006") {
+      e.stopPropagation();
+      setShowRepair(true);
+    }
+  };
+
+  const handleOut = (e) => {
+    if (e.object?.name === "piece_4006") {
+      e.stopPropagation();
+      setShowRepair(false);
+    }
+  };
+
+  return (
+    <primitive
+      object={scene}
+      onPointerOver={handleOver}
+      onPointerOut={handleOut}
+      {...props}
+    />
+  );
 }
 
 function StaticSpots({
@@ -198,6 +224,7 @@ export default function Vehicle({ selectedColor }) {
   const [fly, setFly] = useState(null); // <── NEW
   const [highlight, setHighlight] = useState(null);
   const rotationRef = useRef(new THREE.Object3D());
+  const [showRepair, setShowRepair] = useState(false);
   const controls = useRef();
 
   /* turn the controller on/off whenever wireframeMode changes */
@@ -247,6 +274,7 @@ export default function Vehicle({ selectedColor }) {
               rotationRef={rotationRef}
               selectedColor={selectedColor}
               highlight={highlight} /* <── NEW  */
+              setShowRepair={setShowRepair}
             />
             <JEasingLoop />
             <CameraRig fly={fly} />
@@ -323,6 +351,20 @@ export default function Vehicle({ selectedColor }) {
             />
           </Canvas>
         </CanvasWrapper>
+        {/* {showRepair && (
+          <div
+            style={{
+              position: "absolute",
+              pointerEvents: "none",
+              left: 0,
+              top: 0,
+              width: "100%",
+              height: "100%",
+            }}
+          >
+            <WheelRepair />
+          </div>
+        )} */}
         <ButtonWrapper>
           <AnimatePresence initial={false}>
             {wireframeMode && (
