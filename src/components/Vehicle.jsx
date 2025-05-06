@@ -14,9 +14,6 @@ import useCustomMaterialUpdater from "@/hook/useCustomMaterialUpdater";
 import { BatteryIcon, ChasisIcon, EngineIcon, WheelIcon } from "./icons";
 import { motion, AnimatePresence } from "framer-motion";
 import JEASINGS from "jeasings";
-import { WheelMarker } from "./click-dots";
-import { WheelRepair } from ".";
-import { Html } from "@react-three/drei";
 
 function Model({
   wireframeMode,
